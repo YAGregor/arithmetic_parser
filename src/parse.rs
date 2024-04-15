@@ -42,6 +42,24 @@ pub fn parse(tokens: &mut PeekToken) -> Expression {
     return parse_add(tokens);
 }
 
+fn parse_atom(tokens: &mut PeekToken) -> Expression {
+    return match tokens.peek().unwrap() {
+        Token::Number(n) => {
+            tokens.next();
+            Expression::Number(*n)
+        }
+        Token::LParen => {
+            tokens.next();
+            let res = parse(tokens);
+            tokens.next();
+            res
+        }
+        _ => {
+            todo!()
+        }
+    };
+}
+
 fn is_add_level(token: &Token) -> bool {
     return token == &Token::Add || token == &Token::Sub;
 }
@@ -49,12 +67,12 @@ fn is_add_level(token: &Token) -> bool {
 pub fn parse_add(tokens: &mut PeekToken) -> Expression {
     let mut expression = parse_mul(tokens);
     while let Some(&&ref t) = tokens.peek() {
-        if is_add_level(t) {
-            return parse_add_tail(expression, tokens);
+        return if is_add_level(t) {
+            parse_add_tail(expression, tokens)
         } else {
-            return expression;
-        }
-    }
+            expression
+        };
+    };
     return expression;
 }
 
@@ -78,12 +96,7 @@ fn is_mul_level(token: &Token) -> bool {
 }
 
 pub fn parse_mul(tokens: &mut PeekToken) -> Expression {
-    let mut expression = match tokens.next().unwrap() {
-        Token::Number(n) => {
-            Expression::Number(*n)
-        }
-        _ => { todo!() }
-    };
+    let mut expression = parse_atom(tokens);
 
     while let Some(&&ref t) = tokens.peek() {
         if is_mul_level(t) {
@@ -97,22 +110,16 @@ pub fn parse_mul(tokens: &mut PeekToken) -> Expression {
 
 pub fn parse_mul_tail(pre_exp: Expression, tokens: &mut PeekToken) -> Expression {
     let exp_op = tokens.next().unwrap();
-    match tokens.next().unwrap() {
-        Token::Number(n) => {
-            return if (*exp_op == Token::Mul) {
-                Expression::Mul(Mul {
-                    left: Box::new(pre_exp),
-                    right: Box::new(Expression::Number(*n)),
-                })
-            } else {
-                Expression::Div(Div {
-                    left: Box::new(pre_exp),
-                    right: Box::new(Expression::Number(*n)),
-                })
-            };
-        }
-        _ => {
-            todo!();
-        }
+    let right = parse_atom(tokens);
+    return if (*exp_op == Token::Mul) {
+        Expression::Mul(Mul {
+            left: Box::new(pre_exp),
+            right: Box::new(right),
+        })
+    } else {
+        Expression::Div(Div {
+            left: Box::new(pre_exp),
+            right: Box::new(right),
+        })
     };
 }

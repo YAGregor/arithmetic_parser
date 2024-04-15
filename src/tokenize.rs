@@ -14,10 +14,12 @@ pub fn tokenize(source: String) -> Vec<Token> {
     let mut res = Vec::<Token>::new();
     let mut numbers = Vec::<char>::new();
     fn clear_numbers(numbers: &mut Vec<char>, res: &mut Vec<Token>) {
-        let number_string = numbers.iter().collect::<String>();
-        let number = number_string.parse::<i32>().unwrap();
-        numbers.clear();
-        res.push(Token::Number(number));
+        if !numbers.is_empty() {
+            let number_string = numbers.iter().collect::<String>();
+            let number = number_string.parse::<i32>().unwrap();
+            numbers.clear();
+            res.push(Token::Number(number));
+        }
     }
     for char in source.chars() {
         match char {
@@ -55,9 +57,7 @@ pub fn tokenize(source: String) -> Vec<Token> {
             }
         }
     };
-    if !numbers.is_empty() {
-        clear_numbers(&mut numbers, &mut res);
-    }
+    clear_numbers(&mut numbers, &mut res);
     return res;
 }
 
