@@ -24,25 +24,30 @@ pub struct Mul {
 pub type PeekToken<'a> = Peekable<Iter<'a, Token>>;
 
 pub fn parse(tokens: &mut PeekToken) -> Expression {
-    match tokens.peek() {
-        None => {
-            todo!();
-        }
-        Some(&&ref token) => {
-            match token {
-                Token::Number(n) => {
-                    return parse_mul(tokens);
-                }
-                _ => {
-                    todo!();
-                }
-            }
-        }
-    };
+    return parse_add(tokens);
 }
 
 pub fn parse_add(tokens: &mut PeekToken) -> Expression {
-    return parse_mul(tokens);
+    let mut expression = parse_mul(tokens);
+    while let Some(&&ref t) = tokens.peek() {
+        match t {
+            Token::Add => {
+                expression = parse_add_tail(expression, tokens);
+            }
+            _ => {
+                return expression;
+            }
+        }
+    }
+    return expression;
+}
+
+pub fn parse_add_tail(pre_exp: Expression, tokens: &mut PeekToken) -> Expression {
+    tokens.next();
+    return Expression::Add(Add {
+        left: Box::new(pre_exp),
+        right: Box::new(parse_mul(tokens)),
+    });
 }
 
 pub fn parse_mul(tokens: &mut PeekToken) -> Expression {
@@ -58,7 +63,9 @@ pub fn parse_mul(tokens: &mut PeekToken) -> Expression {
             Token::Mul => {
                 expression = parse_mul_tail(expression, tokens);
             }
-            _ => { todo!() }
+            _ => {
+                return expression;
+            }
         }
     };
     return expression;

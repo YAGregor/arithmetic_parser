@@ -5,7 +5,7 @@ mod tokenize;
 mod parse;
 
 fn main() {
-    let test_string = String::from("1 * 2 * 3");
+    let test_string = String::from("1 * 2 + 3");
     let tokens = tokenize(test_string);
     println!("{:?}", tokens);
     let mut peek_token = tokens.iter().peekable();
