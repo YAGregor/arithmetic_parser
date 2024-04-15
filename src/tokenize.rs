@@ -60,4 +60,3 @@ pub fn tokenize(source: String) -> Vec<Token> {
     clear_numbers(&mut numbers, &mut res);
     return res;
 }
-

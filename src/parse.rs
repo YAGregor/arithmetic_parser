@@ -59,7 +59,7 @@ pub fn parse_add(tokens: &mut PeekToken) -> Expression {
         expression = if is_add_level(t) {
             parse_add_tail(expression, tokens)
         } else {
-            expression
+            return expression;
         };
     };
     return expression;
@@ -85,7 +85,7 @@ fn is_mul_level(token: &Token) -> bool {
 }
 
 pub fn parse_mul(tokens: &mut PeekToken) -> Expression {
-    let mut expression = parse_atom(tokens);
+    let mut expression = parse_power(tokens);
 
     while let Some(&&ref t) = tokens.peek() {
         if is_mul_level(t) {
@@ -99,7 +99,7 @@ pub fn parse_mul(tokens: &mut PeekToken) -> Expression {
 
 pub fn parse_mul_tail(pre_exp: Expression, tokens: &mut PeekToken) -> Expression {
     let exp_op = tokens.next().unwrap();
-    let right = parse_atom(tokens);
+    let right = parse_power(tokens);
     return if (*exp_op == Token::Mul) {
         Expression::Mul(Mul {
             left: Box::new(pre_exp),
@@ -113,14 +113,27 @@ pub fn parse_mul_tail(pre_exp: Expression, tokens: &mut PeekToken) -> Expression
     };
 }
 
+
 pub fn parse_power(tokens: &mut PeekToken) -> Expression {
     let expression = parse_atom(tokens);
-    while let Some(Token::Power) = tokens.peek() {};
-    return expression;
+    return if let Some(&&ref t) = tokens.peek() {
+        if (*t == Token::Power) {
+            parse_power_tail(expression, tokens)
+        } else {
+            expression
+        }
+    } else {
+        expression
+    };
 }
 
-pub fn parse_power_tail() -> Expression {
-    todo!()
+pub fn parse_power_tail(pre_exp: Expression, tokens: &mut PeekToken) -> Expression {
+    tokens.next();
+    let right = parse_power(tokens);
+    return Expression::Power(Power {
+        left: Box::new(pre_exp),
+        right: Box::new(right),
+    });
 }
 
 fn parse_atom(tokens: &mut PeekToken) -> Expression {
@@ -140,4 +153,3 @@ fn parse_atom(tokens: &mut PeekToken) -> Expression {
         }
     };
 }
-
