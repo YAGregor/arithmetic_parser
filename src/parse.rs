@@ -8,11 +8,18 @@ pub enum Expression {
     Add(Add),
     Mul(Mul),
     Div(Div),
+    Sub(Sub),
     Number(i32),
 }
 
 #[derive(Debug)]
 pub struct Add {
+    left: Box<Expression>,
+    right: Box<Expression>,
+}
+
+#[derive(Debug)]
+pub struct Sub {
     left: Box<Expression>,
     right: Box<Expression>,
 }
@@ -35,27 +42,35 @@ pub fn parse(tokens: &mut PeekToken) -> Expression {
     return parse_add(tokens);
 }
 
+fn is_add_level(token: &Token) -> bool {
+    return token == &Token::Add || token == &Token::Sub;
+}
+
 pub fn parse_add(tokens: &mut PeekToken) -> Expression {
     let mut expression = parse_mul(tokens);
     while let Some(&&ref t) = tokens.peek() {
-        match t {
-            Token::Add => {
-                expression = parse_add_tail(expression, tokens);
-            }
-            _ => {
-                return expression;
-            }
+        if is_add_level(t) {
+            return parse_add_tail(expression, tokens);
+        } else {
+            return expression;
         }
     }
     return expression;
 }
 
 pub fn parse_add_tail(pre_exp: Expression, tokens: &mut PeekToken) -> Expression {
-    tokens.next();
-    return Expression::Add(Add {
-        left: Box::new(pre_exp),
-        right: Box::new(parse_mul(tokens)),
-    });
+    let t = tokens.next().unwrap();
+    return if t == &Token::Add {
+        Expression::Add(Add {
+            left: Box::new(pre_exp),
+            right: Box::new(parse_mul(tokens)),
+        })
+    } else {
+        Expression::Sub(Sub {
+            left: Box::new(pre_exp),
+            right: Box::new(parse_mul(tokens)),
+        })
+    };
 }
 
 fn is_mul_level(token: &Token) -> bool {
