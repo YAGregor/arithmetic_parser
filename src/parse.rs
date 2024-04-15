@@ -10,6 +10,13 @@ pub enum Expression {
     Div(Div),
     Sub(Sub),
     Number(i32),
+    Power(Power),
+}
+
+#[derive(Debug)]
+pub struct Power {
+    left: Box<Expression>,
+    right: Box<Expression>,
 }
 
 #[derive(Debug)]
@@ -42,24 +49,6 @@ pub fn parse(tokens: &mut PeekToken) -> Expression {
     return parse_add(tokens);
 }
 
-fn parse_atom(tokens: &mut PeekToken) -> Expression {
-    return match tokens.peek().unwrap() {
-        Token::Number(n) => {
-            tokens.next();
-            Expression::Number(*n)
-        }
-        Token::LParen => {
-            tokens.next();
-            let res = parse(tokens);
-            tokens.next();
-            res
-        }
-        _ => {
-            todo!()
-        }
-    };
-}
-
 fn is_add_level(token: &Token) -> bool {
     return token == &Token::Add || token == &Token::Sub;
 }
@@ -67,7 +56,7 @@ fn is_add_level(token: &Token) -> bool {
 pub fn parse_add(tokens: &mut PeekToken) -> Expression {
     let mut expression = parse_mul(tokens);
     while let Some(&&ref t) = tokens.peek() {
-        return if is_add_level(t) {
+        expression = if is_add_level(t) {
             parse_add_tail(expression, tokens)
         } else {
             expression
@@ -123,3 +112,32 @@ pub fn parse_mul_tail(pre_exp: Expression, tokens: &mut PeekToken) -> Expression
         })
     };
 }
+
+pub fn parse_power(tokens: &mut PeekToken) -> Expression {
+    let expression = parse_atom(tokens);
+    while let Some(Token::Power) = tokens.peek() {};
+    return expression;
+}
+
+pub fn parse_power_tail() -> Expression {
+    todo!()
+}
+
+fn parse_atom(tokens: &mut PeekToken) -> Expression {
+    return match tokens.peek().unwrap() {
+        Token::Number(n) => {
+            tokens.next();
+            Expression::Number(*n)
+        }
+        Token::LParen => {
+            tokens.next();
+            let res = parse(tokens);
+            tokens.next();
+            res
+        }
+        _ => {
+            todo!()
+        }
+    };
+}
+

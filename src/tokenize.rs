@@ -6,7 +6,7 @@ pub enum Token {
     Sub,
     Mul,
     Div,
-    Fact,
+    Power,
     Number(i32),
 }
 
@@ -45,7 +45,7 @@ pub fn tokenize(source: String) -> Vec<Token> {
             }
             '^' => {
                 clear_numbers(&mut numbers, &mut res);
-                res.push(Token::Fact);
+                res.push(Token::Power);
             }
             '/' => {
                 clear_numbers(&mut numbers, &mut res);
